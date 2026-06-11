@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フェードインアニメーション</title>
+<style>
+/* フェードインアニメーションの定義 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(1080px); /* 少し下からフワッとさせる場合 */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 画像の基本スタイルとアニメーションの適用 */
+.fade-in-image {
+  width: 100%;
+  max-width: 1920px;
+  opacity: 0; /* 最初は透明にして見えなくする */
+  animation-name: fadeIn;
+  animation-duration: 2.0s; /* アニメーションの時間（1.5秒） */
+  animation-timing-function: ease-out; /* 滑らかに表示 */
+  animation-fill-mode: forwards; /* アニメーション終了時の状態を保持 */
+}
+</style>
+</head>
+<body>
+
+  <!-- フェードインさせたい画像にクラスを追加 -->
+  <img src="1920x1080.jpg" alt="1920x1080 Image" class="fade-in-image">
+
+</body>
+</html>

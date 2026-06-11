@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>途中で止まる落下アニメーション</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f0f4f8; /* 背景色 */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 落下して途中で止まるアニメーションの定義 */
+  @keyframes fallAndStop {
+    0% {
+      transform: translateY(-100vh) rotate(-10deg); /* 画面の外（上側）からスタート */
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0) rotate(0deg); /* 本来の表示位置（画面中央）で止まる */
+      opacity: 1;
+    }
+  }
+
+  /* 降ってくる画像の設定 */
+  .falling-image {
+    width: 600px; /* 画像のサイズ（お好みで調整） */
+    height: auto;
+    
+    /* アニメーションの設定 */
+    animation: fallAndStop 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    
+    /* 
+      【重要】forwards を指定することで、
+      アニメーション終了時の状態（100%の位置）をそのまま維持します。
+    */
+  }
+</style>
+</head>
+<body>
+
+  <!-- 降らせたい画像を1つだけ配置 -->
+  <!-- 画像パスをご自身の環境に合わせて変更してください -->
+  <img src="800x600.jpg" alt="降ってくる画像" class="falling-image">
+
+</body>
+</html>
+>
