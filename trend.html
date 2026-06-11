@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>降ってくるトレンド情報</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #0d1117; /* ダークモード風 */
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    overflow: hidden; /* 画面外のはみ出しを隠す */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    z-index: 10;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  /* トレンドキーワードが降ってくるエリア */
+  #drop-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* クリック判定を無効化して背景に徹する */
+    z-index: 1;
+  }
+
+  /* 降ってくるキーワードの共通スタイル */
+  .trend-item {
+    position: absolute;
+    top: -100px; /* 画面外からスタート */
+    background-color: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00dcff; /* トレンドカラー */
+    white-space: nowrap;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    animation: fall linear forwards;
+  }
+
+  /* 落下アニメーション（回転と移動） */
+  @keyframes fall {
+    0% {
+      top: -100px;
+      opacity: 0;
+      transform: translateY(0) rotate(0deg);
+    }
+    10: {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      top: 100vh;
+      opacity: 0;
+      transform: translateY(200px) rotate(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <h1>? 本日のトレンド</h1>
+  <div id="drop-area"></div>
+
+  <script>
+    // 降らせたいトレンド情報のリスト
+    const trendKeywords = [
+      "AI技術", "生成AI", "宇宙開発", 
+      "メタバース", "量子コンピュータ", "SDGs", 
+      "リモートワーク", "仮想通貨", "電気自動車", 
+      "スマートシティ"
+    ];
+
+    const dropArea = document.getElementById("drop-area");
+
+    function createTrend() {
+      const trend = document.createElement("div");
+      trend.classList.add("trend-item");
+
+      // リストからランダムにキーワードを選ぶ
+      const randomIndex = Math.floor(Math.random() * trendKeywords.length);
+      trend.innerText = "? " + trendKeywords[randomIndex];
+
+      // 横位置（X軸）、アニメーションの速度、文字の大きさをランダムに設定
+      const randomX = Math.random() * window.innerWidth;
+      const duration = Math.random() * 5 + 5; // 5秒?10秒
+      const fontSize = Math.random() * 0.8 + 1.0; // 1.0rem?1.8rem
+
+      trend.style.left = `${randomX}px`;
+      trend.style.animationDuration = `${duration}s`;
+      trend.style.fontSize = `${fontSize}rem`;
+
+      dropArea.appendChild(trend);
+
+      // 画面から消えたら要素を削除する
+      setTimeout(() => {
+        trend.remove();
+      }, duration * 1000);
+    }
+
+    // 0.8秒間隔でキーワードを新しく発生させる
+    setInterval(createTrend, 800);
+  </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yahoo!リアルタイム検索 トレンド演出</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f1015;
+            color: #ffffff;
+            font-family: sans-serif;
+        }
+        .falling-text {
+            position: absolute;
+            top: -100px;
+            white-space: nowrap;
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { top: -100px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100vh; opacity: 0; }
+        }
+        .center-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff0033, #ff6600);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p { color: #a0aec0; }
+    </style>
+</head>
+<body>
+
+    <div class="center-container">
+        <h1>Yahoo! Realtime</h1>
+        <p id="status">Yahoo!トレンドを解析中...</p>
+    </div>
+
+    <script>
+        // 初期値（データが読み込めなかった場合のフォールバック用）
+        let trendKeywords = ["Yahoo!リアルタイム", "データ取得中..."];
+
+        // Yahoo!リアルタイム検索のトップページをスクレイピングして解析する関数
+        async function fetchYahooTrends() {
+            // トレンドランキングが掲載されている本家URL
+            const targetUrl = "https://search.yahoo.co.jp/realtime";
+            // CORS制限を回避する無料プロキシ（AllOrigins）
+            const proxyUrl = `https://allorigins.win{encodeURIComponent(targetUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("ネットワークエラー");
+                
+                const data = await response.json();
+                
+                // 取得したHTML文字列を解析できるようにパースする
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, "text/html");
+                
+                // Yahoo!リアルタイム検索のランキングキーワードを保持している要素を特定
+                // aタグのhref属性が「/realtime/search?p=」で始まるものを全抽出
+                const links = doc.querySelectorAll('a[href*="/realtime/search?p="]');
+                const keywords = [];
+
+                links.forEach(link => {
+                    const text = link.textContent.trim();
+                    // 不要な記号や数字だけのデータ、ハッシュタグを除外して綺麗なキーワードのみを抽出
+                    if (text && !text.match(/^#?+$/) && text.length > 1 && !keywords.includes(text)) {
+                        keywords.push(text);
+                    }
+                });
+
+                if (keywords.length > 0) {
+                    // 上位20〜30件程度をターゲットにするため、少し絞る
+                    trendKeywords = keywords.slice(0, 30);
+                    document.getElementById("status").innerText = "いま、X（旧Twitter）で話題のワードが降っています";
+                    console.log("Yahoo!トレンド取得成功:", trendKeywords);
+                } else {
+                    throw new Error("キーワードが抽出できませんでした（仕様変更の可能性）");
+                }
+            } catch (error) {
+                console.error("データの取得に失敗しました:", error);
+                document.getElementById("status").innerText = "エラー: 代替ワードを表示中";
+            }
+        }
+
+        // テキストを画面上部から降らせる関数
+        function createFallingText() {
+            if (trendKeywords.length === 0) return;
+
+            const textElement = document.createElement('div');
+            textElement.classList.add('falling-text');
+            
+            const randomIndex = Math.floor(Math.random() * trendKeywords.length);
+            textElement.innerText = trendKeywords[randomIndex];
+
+            const fontSize = Math.floor(Math.random() * 18) + 14; // 14px〜32px
+            textElement.style.fontSize = fontSize + 'px';
+
+            const randomX = Math.random() * window.innerWidth;
+            textElement.style.left = randomX + 'px';
+
+            const fallDuration = Math.random() * 4 + 4; // 4〜8秒
+            textElement.style.animationDuration = fallDuration + 's';
+
+            // Yahoo!のイメージカラー（赤・オレンジ系）をベースにしたパレット
+            const colors = ['#ff0033', '#ff3366', '#ff6600', '#ff9900', '#ffcc00'];
+            textElement.style.color = colors[Math.floor(Math.random() * colors.length)];
+
+            document.body.appendChild(textElement);
+
+            setTimeout(() => {
+                textElement.remove();
+            }, fallDuration * 1000);
+        }
+
+        // 最初にデータを取得
+        fetchYahooTrends();
+
+        // トレンドの移り変わりが早いため、3分ごとに最新情報に更新
+        setInterval(fetchYahooTrends, 1000 * 60 * 3);
+
+        // 400ミリ秒ごとに文字を降らせる
+        setInterval(createFallingText, 400);
+    </script>
+</body>
+</html>

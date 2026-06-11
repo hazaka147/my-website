@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムGoogleトレンド演出</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d1117;
+            color: #ffffff;
+            font-family: sans-serif;
+        }
+        .falling-text {
+            position: absolute;
+            top: -100px;
+            white-space: nowrap;
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { top: -100px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100vh; opacity: 0; }
+        }
+        .center-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4285F4, #EA4335, #FBBC05, #34A853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p { color: #a0aec0; }
+    </style>
+</head>
+<body>
+
+    <div class="center-container">
+        <h1>Google Trends</h1>
+        <p id="status">トレンドデータを読み込み中...</p>
+    </div>
+
+    <script>
+        // 初期値（データが読み込めなかった場合のフォールバック用）
+        let trendKeywords = ["Googleトレンド", "データ取得中..."];
+
+        // 1. GoogleトレンドのRSSをCORS制限を回避して取得する関数
+        async function fetchTrends() {
+            // Googleトレンド（日本）のRSS URL
+            const rssUrl = "https://google.co.jp";
+            // CORS回避のための無料プロキシサービス（AllOrigins）を利用
+            const proxyUrl = `https://allorigins.win{encodeURIComponent(rssUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("ネットワークエラー");
+                
+                const data = await response.json();
+                
+                // XML（RSS文字列）を解析するためのパーサー
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                
+                // <title>タグ（検索キーワード）をすべて抽出
+                const items = xmlDoc.getElementsByTagName("title");
+                const keywords = [];
+                
+                // 最初のタイトルは「Google トレンド」という全体の題名なので、2番目（インデックス1）から取得
+                for (let i = 1; i < items.length; i++) {
+                    keywords.push(items[i].textContent);
+                }
+
+                if (keywords.length > 0) {
+                    trendKeywords = keywords;
+                    document.getElementById("status").innerText = "リアルタイム急上昇キーワードが降っています";
+                    console.log("取得成功:", trendKeywords);
+                }
+            } catch (error) {
+                console.error("データの取得に失敗しました:", error);
+                document.getElementById("status").innerText = "エラー: 代替ワードを表示中";
+            }
+        }
+
+        // 2. テキストを画面上部から降らせる関数
+        function createFallingText() {
+            if (trendKeywords.length === 0) return;
+
+            const textElement = document.createElement('div');
+            textElement.classList.add('falling-text');
+            
+            const randomIndex = Math.floor(Math.random() * trendKeywords.length);
+            textElement.innerText = trendKeywords[randomIndex];
+
+            const fontSize = Math.floor(Math.random() * 16) + 16;
+            textElement.style.fontSize = fontSize + 'px';
+
+            const randomX = Math.random() * window.innerWidth;
+            textElement.style.left = randomX + 'px';
+
+            const fallDuration = Math.random() * 4 + 4; // 4〜8秒
+            textElement.style.animationDuration = fallDuration + 's';
+
+            // Googleロゴの4色風のカラーパレット
+            const colors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
+            textElement.style.color = colors[Math.floor(Math.random() * colors.length)];
+
+            document.body.appendChild(textElement);
+
+            setTimeout(() => {
+                textElement.remove();
+            }, fallDuration * 1000);
+        }
+
+        // 最初にデータを取得
+        fetchTrends();
+
+        // 5分ごとに最新のトレンドに更新する
+        setInterval(fetchTrends, 1000 * 60 * 5);
+
+        // 450ミリ秒ごとに文字を降らせる
+        setInterval(createFallingText, 450);
+    </script>
+</body>
+</html>
